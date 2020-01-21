@@ -1,0 +1,21 @@
+{% extends "shop/base.html" %}
+{% block data %}
+<a href="{% url 'shop:register' %}"class="logout-submit">register</a>
+{% endblock %}
+{% block content %}
+<div class="container">
+    <div class="col-md-8 col-md-offset-2">
+        <div class="panel panel-default">
+            <div class="panel-heading">Dashboard</div>
+            <div class="panel-body">
+                {% if error_message %}
+                    <p class="bg-danger p-d ml-b">{{ error_message }}</p>
+                {% endif %}
+            </div>
+            <div class="panel-body">
+              <p>You are logged in!!!</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
