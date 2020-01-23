@@ -22,13 +22,15 @@
     <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
 
     <link rel="stylesheet" href="style.css">
+    {% block head %}
+    {% endblock %}
 </head>
 <body class="override">
     <nav class="navbar navbar-inverse" role="navigation" >
         <div class="container">
           {% block data %}{% endblock %}
             <div class="navbar-header">
-                <a class="navbar-brand" href="{% url 'shop:hello' %}">food shop</a>
+                <a class="navbar-brand" href="{% url 'shop:dashboard' %}">food shop</a>
             </div>
         </div>
     </nav>
