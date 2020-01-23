@@ -1,0 +1,43 @@
+{% extends "shop/base.html" %}
+{% block data %}
+<a href="{% url 'shop:logout' %}"class="logout-submit">logout</a>
+{% endblock %}
+{% block content %}
+<div class="container">
+    <form action="{% url 'shop:profile' %}" method="post">
+        {% csrf_token %}
+        <div class="col-md-8 col-md-offset-2">
+            <div class="panel panel-default">
+                <div class="panel-heading">Edit Profile</div>
+                <div class="panel-body">
+                    {% if error_message %}
+                        <p class="bg-danger p-d ml-b">{{ error_message }}</p>
+                    {% endif %}
+
+                    <div class="form-group clearfix">
+                        <label class="col-md-4 control-label text-right">First Name</label>
+                        <div class="col-md-6">
+                            <input type="text" name="first_name" value="{{user.first_name}}">
+                        </div>
+                    </div>
+                    <div class="form-group clearfix">
+                        <label class="col-md-4 control-label text-right">Last Name</label>
+                        <div class="col-md-6">
+                            <input type="text" name="last_name" value="{{user.last_name}}">
+                        </div>
+                    </div>
+                    <div class="form-group clearfix">
+                        <label class="col-md-4 control-label text-right">Phone Number</label>
+                        <div class="col-md-6">
+                            <input type="number" name="phone_number" value="{{user.phone_number}}">
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-md-offset-4">
+                        <input type="submit" value="Edit" class="btn btn-success">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

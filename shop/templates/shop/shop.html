@@ -1,0 +1,36 @@
+{% extends "shop/base.html" %}
+
+{% block content %}
+<div class="container">
+  <div class="col-md-8 col-md-offset-2">
+    <div class="panel panel-default">
+      <div class="panel-heading">shop.name</div>
+        <div class="panel-body">
+          {% if error_message %}
+              <p class="bg-danger p-d ml-b">{{ error_message }}</p>
+          {% endif %}
+          <div class="col-md-12 col-md-offset-0">
+            <table class="table">
+              <tbody>
+                <tr>
+                  <th>Food Name</th>
+                  <th>Food Category</th>
+                  <th>Food Real Price</th>
+                  <th>Food Discounted Price</th>
+                </tr>
+                {% for food in foods %}
+                <tr>
+                  <td>{{food.name}}</td>
+                  <td>{{food.cat_id}}</td>
+                  <td style="color:red">{{food.discounted_price}}$</td>
+                  <td>{{food.price}}$</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

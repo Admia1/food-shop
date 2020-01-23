@@ -1,0 +1,27 @@
+{% extends "shop/base.html" %}
+
+{% block content %}
+<div class="container">
+  <div class="col-md-8 col-md-offset-2">
+    <div class="panel panel-default">
+      <div class="panel-heading">Shops</div>
+        <div class="panel-body">
+          {% if error_message %}
+              <p class="bg-danger p-d ml-b">{{ error_message }}</p>
+          {% endif %}
+          <div class="col-md-12 col-md-offset-0">
+            <table class="table">
+              <tbody>
+                {% for shop in shops %}
+                <tr>
+                  <td><a href="{% url 'shop:shop' shop.id %}">{{ shop.name }}</a></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
