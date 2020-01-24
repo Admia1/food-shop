@@ -19,5 +19,7 @@ urlpatterns = [
     path('orders/', views.orders, name='orders'),
     path('order/<int:shop_id>/', views.order, name='order'),#use post to comment
 
+    path('finilize_order/', views.finalize, name='finalize'),
+
     #todo search
 ]

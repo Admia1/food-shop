@@ -37,6 +37,11 @@ db_cat = [{'id':1, 'name':'hotdog'},
        {'id':5, 'name':'soup'}
     ]
 db_addresses = [] #{'id':1,'text':'here', 'city_id':1,'user_id':1, 'x':30, 'y':50}
+db_comments = []
+db_orders = []
+db_got_in_chart = []
+
+
 def add_cookie(user_id):
     new_cookie = randint(100000000000000000000000,100000000000000000000000*10-1)
     while(new_cookie in active_cookies):
@@ -83,7 +88,7 @@ def register(request):
         if user['email'] == request.POST['email']:
             return render(request, template, {'error_message' : 'invalid post : you registered before'})
 
-    new_user_id = db_user
+    new_user_id = len(db_users)+1
     db_users.append({'id': new_user_id, 'first_name': request.POST['first_name'], 'last_name': request.POST['last_name'], 'email': request.POST['email'], 'password': request.POST['password'], 'phone_number':request.POST['phone_number']})
 
     t = loader.get_template('shop/login.html')
@@ -237,7 +242,35 @@ def shop(request, shop_id):
         return render(request, 'shop/shop.html', {'shop':cur_shop, 'foods':shop_foods})
     #add or remove item
     #TODO
+    for field in ['food_id', 'count']:
+        if not post_validator(request,field):
+            return render(request, template, {'error_message' : 'invalid post form : '+field, 'shop':cur_shop, 'foods':shop_foods})
+    try:
+        food_id = int(request.POST['food_id'])
+        count = int(request.POST['count'])
+        if count not in [1,-1]:
+            raise 1
+    except:
+        return render(request, template, {'error_message':'geo_x geo_y bad format', 'shop':cur_shop, 'foods':shop_foods})
 
+    cur_item = False
+    for item in db_got_in_chart:
+        if item['food_id'] == food_id and item['user_id'] == cur_user_id:
+            cur_item = item
+
+    if not cur_item:
+        if count == 1:
+            new_item = {'id':db_got_in_chart[-1]['id']+1, 'food_id':food_id, count:1}
+            db_got_in_chart.append()
+        else:
+            return render(request, template, {'error_message':'nothing to remove', 'shop':cur_shop, 'foods':shop_foods})
+
+    item['count'] += count
+    if item['count'] == 0:
+        pass
+        #TODO remove it
+
+    return render(request, template, {'shop':cur_shop, 'foods':shop_foods})
 
 
 def addresses(request):
@@ -355,10 +388,40 @@ def order(request, order_id):
         if not post_validator(request,field):
             return render(request, template, {'error_message' : 'invalid post form : '+field, 'order':order})
 
-    
+    # if no comment
+    try:
+        rate = int(request.POST['rate'])
+        if rate>5 or rate<1:
+            raise 1
+    except:
+        return render(request, template, {'error_message':'invalid rate format', 'order':order})
+    new_comment = {'id':len(db_comments)+1, 'rate':rate, 'text':request.POST['text']}
+    db_comments.append(new_comment)
+    order['comment_id'] = new_comment['id']
 
-
+    #TODO show comments of order
+    return render(request, template, {'order':order})
 
 
 def orders(request):
+    pass
+
+
+
+def finalize(request):
+    template = 'shop/finalize.html'
+    if 'food-shop-cookie' not in request.COOKIES:
+        return HttpResponseRedirect(reverse('shop:login'))
+    if not active_cookies.get(request.COOKIES['food-shop-cookie']):
+        return HttpResponseRedirect(reverse('shop:login'))
+
+    cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
+    cur_user = False
+    for user in db_users:
+        if user['id'] == cur_user_id:
+            cur_user = user
+            break
+    if not cur_user:
+        return render(request, template, {'error_message': 'my bad'})
+
     pass
