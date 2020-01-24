@@ -18,7 +18,7 @@ SELECT * FROM kiho.Address WHERE ( id = ID );
 
 SELECT * FROM kiho.Address WHERE ( text = 'TEXT' );
 
-SELECT * FROM kiho.Address WHERE ( cityid = 'CITYID' );
+SELECT * FROM kiho.Address WHERE ( cityid = CITYID );
 
 SELECT * FROM kiho.Address WHERE kiho.Address.cityid IN (SELECT id FROM kiho.City WHERE name = 'NAME'); # addresses in a specific city
 
@@ -38,9 +38,9 @@ SELECT * FROM kiho.Category WHERE ( id = ID );
 
 SELECT * FROM kiho.Category WHERE ( name = NAME);
 
-INSERT INTO kiho.Address ( name )VALUES ('NAME');
+INSERT INTO kiho.Category ( name )VALUES ('NAME');
 
-UPDATE kiho.Address SET name = 'NAME' WHERE id = ID;
+UPDATE kiho.Category SET name = 'NAME' WHERE id = ID;
 
 #User
 
@@ -110,10 +110,10 @@ SELECT * FROM kiho.Food WHERE ( catid = CATID);
 
 SELECT * FROM kiho.Food WHERE ( shopid = SHOPID and catid = CATID);
 
-INSERT INTO kiho.Food (shopid, catid , price, name, discount , about)
-VALUES (SHOPID, CATID , PRICE , 'NAME' , DISCOUNT , 'ABOUT' );
+INSERT INTO kiho.Food (shopid, catid , price, name, discount ,percent , about)
+VALUES (SHOPID, CATID , PRICE , 'NAME' , DISCOUNT , PERCENT , 'ABOUT' );
 
-UPDATE kiho.Food SET shopid = SHOPID , catid = CATID , price = PRICE , name = 'NAME' , discount = DISCOUNT , about = 'ABOUT' WHERE id = ID;
+UPDATE kiho.Food SET shopid = SHOPID , catid = CATID , price = PRICE , name = 'NAME' , discount = DISCOUNT , percent = PERCENT , about = 'ABOUT' WHERE id = ID;
 
 #GetinCart
 
@@ -169,3 +169,7 @@ UPDATE kiho.order_food_relation SET foodid = FOODID , orderid = ORDERID , count 
 #special purpose
 
 SELECT * FROM kiho.Food JOIN kiho.Shop on kiho.Food.shopid = kiho.Shop.id join kiho.Category on kiho.Food.catid=kiho.Category.id
+
+Select kiho.GetinCart.id , kiho.GetinCart.count , kiho.Food.name , kiho.Food.discount , kiho.Food.percent ,kiho.Food.price from kiho.GetinCart left outer join kiho.Food on (kiho.GetinCart.foodid = kiho.Food.id) WHERE kiho.GetinCart.userid = ID;
+
+Select 

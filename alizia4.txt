@@ -66,6 +66,7 @@ CREATE TABLE kiho.Food(
  price  INTEGER,
  name    TEXT,
  discount INTEGER,
+ percent  DOUBLE(5,0),
  about  TEXT,
  FOREIGN KEY(catid) REFERENCES kiho.Category (id),
  FOREIGN KEY(shopid) REFERENCES kiho.Shop (id)
