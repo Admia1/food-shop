@@ -1,0 +1,110 @@
+#Ali Zia SQL
+GRANT ALL PRIVILEGES ON *.* TO 'kiho'@'localhost' IDENTIFIED BY 'kiho';
+
+CREATE TABLE kiho.City (
+ id INTEGER  PRIMARY KEY AUTO_INCREMENT,
+ name   TEXT,
+ location   TEXT
+);
+
+CREATE TABLE    kiho.User    (
+ id            INTEGER  PRIMARY KEY AUTO_INCREMENT,
+ firstname   TEXT,
+ lastname     TEXT,
+ password  TEXT,
+ email TEXT,
+ phone TEXT
+);
+
+CREATE TABLE kiho.Address (
+ id      INTEGER  PRIMARY KEY AUTO_INCREMENT,
+ text   TEXT,
+ cityid     INTEGER,
+ x    DOUBLE(5,0),
+ y    DOUBLE(5,0),
+ ownerid INTEGER,
+ FOREIGN KEY(cityid) REFERENCES  City (id),
+ FOREIGN KEY(ownerid) REFERENCES  User (id)
+);
+
+CREATE TABLE kiho.Category (
+ id INTEGER  PRIMARY KEY AUTO_INCREMENT,
+ name   TEXT
+);
+
+CREATE TABLE  kiho.Discount(
+ id    INTEGER PRIMARY KEY AUTO_INCREMENT,
+ text    TEXT,
+ pencount  INTEGER
+);
+
+CREATE TABLE kiho.Shop
+(
+ id    INTEGER PRIMARY KEY AUTO_INCREMENT,
+ cityid               INTEGER,
+ name              TEXT,
+ min_bill_val     INTEGER,
+ about                TEXT,
+ address_text    TEXT,
+ x     DOUBLE(5,0),
+ y     DOUBLE(5,0),
+ FOREIGN KEY   (cityid)     REFERENCES    kiho.City(id)
+);
+
+CREATE TABLE kiho.Access_Discount (
+ id INTEGER  PRIMARY KEY AUTO_INCREMENT,
+ dis_id INTEGER,
+ user_id INTEGER,
+ FOREIGN KEY(user_id) REFERENCES User(id),
+ FOREIGN KEY(dis_id) REFERENCES Discount(id)
+);
+
+CREATE TABLE kiho.Food(
+ id INTEGER PRIMARY KEY AUTO_INCREMENT,
+ shopid  INTEGER,
+ catid INTEGER,
+ price  INTEGER,
+ name    TEXT,
+ discount INTEGER,
+ about  TEXT,
+ FOREIGN KEY(catid) REFERENCES kiho.Category (id),
+ FOREIGN KEY(shopid) REFERENCES kiho.Shop (id)
+);
+
+CREATE TABLE kiho.GetinCart (
+ id INTEGER  PRIMARY KEY AUTO_INCREMENT,
+ userid INTEGER,
+ foodid   INTEGER,
+ count     INTEGER,
+ FOREIGN KEY(foodid) REFERENCES Food (id),
+ FOREIGN KEY(userid) REFERENCES User (id)
+);
+
+CREATE TABLE kiho.Comment (
+ id     INTEGER  PRIMARY KEY AUTO_INCREMENT,
+ text     TEXT
+);
+
+CREATE TABLE kiho.Order (
+ id      INTEGER PRIMARY KEY AUTO_INCREMENT,
+ userid    INTEGER,
+ shopid    INTEGER,
+ addressid     INTEGER,
+ disid     INTEGER,
+ coomentid    INTEGER,
+ status    INTEGER,
+ FOREIGN  KEY   (disid) REFERENCES Discount(id),
+ FOREIGN  KEY   (addressid) REFERENCES Address(id),
+ FOREIGN  KEY   (coomentid) REFERENCES Comment(id),
+ FOREIGN  KEY   (shopid) REFERENCES Shop(id),
+ FOREIGN  KEY   (userid) REFERENCES User(id)
+);
+
+CREATE TABLE kiho.order_food_relation (
+ id     INTEGER PRIMARY KEY AUTO_INCREMENT,
+ foodid    INTEGER,
+ orderid    INTEGER,
+ count     INTEGER,
+ FOREIGN   KEY (orderid) REFERENCES kiho.Order(id),
+ FOREIGN   KEY (foodid) REFERENCES kiho.Food(id)
+);

@@ -1,8 +1,8 @@
 Ali Zia SQL
 CREATE TABLE kiho.City (
-	"id"	INTEGER  PRIMARY KEY AUTOINCREMENT,
-	"name"	TEXT,
-	"location"	TEXT
+	"id"    INTEGER  PRIMARY KEY AUTOINCREMENT,
+	"name"   TEXT,
+	"location"   TEXT
 );
 CREATE TABLE kiho.Address (
 	id      INTEGER  PRIMARY KEY AUTOINCREMENT,
