@@ -4,6 +4,10 @@ from django.urls import reverse
 from django.template import loader
 from random import randint
 
+import mysql.connector as mariadb
+mariadb_connection = mariadb.connect(user='food_shop_user', password='food_shop_user_password', database='food_shop')
+cursor = mariadb_connection.cursor()
+
 active_cookies = {}#key user_id
 db_users = []
 db_cities = [{'id':1, 'name':'Shiraz'}, {'id':2, 'name':'Tehran'}, {'id':3, 'name':'Isfehan'}, {'id':4, 'name':'Mash-had'}]
@@ -87,13 +91,21 @@ def register(request):
     #to do phone number validator
     #to do password
 
-    for user in db_users:
-        if user['email'] == request.POST['email']:
-            return render(request, template, {'error_message' : 'invalid post : you registered before'})
+    # for user in db_users:
+    #     if user['email'] == request.POST['email']:
+    #         return render(request, template, {'error_message' : 'invalid post : you registered before'})
 
-    new_user_id = len(db_users)+1
-    db_users.append({'id': new_user_id, 'first_name': request.POST['first_name'], 'last_name': request.POST['last_name'], 'email': request.POST['email'], 'password': request.POST['password'], 'phone_number':request.POST['phone_number']})
+    #
+    # new_user_id = len(db_users)+1
+    # db_users.append({'id': new_user_id, 'first_name': request.POST['first_name'], 'last_name': request.POST['last_name'], 'email': request.POST['email'], 'password': request.POST['password'], 'phone_number':request.POST['phone_number']})
 
+    cursor.execute("select * from User where email ='" + request.POST['email']+"'")
+    res = cursor.fetchall()
+    if res:
+        return render(request, template, {'error_message' : 'invalid post : you registered before'})
+    cursor.execute("INSERT INTO User (first_name, last_name, password, email , phone_number) VALUES ('" +request.POST['first_name']+"' , '"+request.POST['last_name']+"' , '"+request.POST['password']+"' , '"+request.POST['email']+"' , '"+request.POST['phone_number']+"' )")
+    cursor.execute("select * from User where email='"+request.POST['email']+"'")
+    new_user_id = cursor.fetchall()[0][0]
     t = loader.get_template('shop/login.html')
     content = {'logged_in': True, 'error_message':'you logged in'}
     response = HttpResponse(t.render(content, request))
@@ -116,18 +128,20 @@ def login(request):
     if ('email' not in request.POST) or ('password' not in request.POST):
         return render(request, template, {'error_message' : "bad post format", 'logged_in' : False})
 
-    cur_user = False
-    for user in db_users:
-        if user['email'] == request.POST['email'] and user['password'] == request.POST['password']:
-            cur_user = user
-            break
-    if not cur_user:
+    # cur_user = False
+    # for user in db_users:
+    #     if user['email'] == request.POST['email'] and user['password'] == request.POST['password']:
+    #         cur_user = user
+    #         break
+    cursor.execute("select * from User where email='"+ request.POST['email'] +"' and password='"+ request.POST['password'] +"'")
+    res= cursor.fetchall()
+    if not res:
         return render(request, template, {'error_message' : "Wrong email or password", 'logged_in' : False})
-
+    cur_user_id = res[0][0]
     t = loader.get_template('shop/login.html')
     content = {'logged_in': True, 'error_message':'you logged in'}
     response = HttpResponse(t.render(content, request))
-    new_cookie = add_cookie(user['id'])
+    new_cookie = add_cookie(cur_user_id)
     response.set_cookie('food-shop-cookie',str(new_cookie))
 
     return response
@@ -147,14 +161,9 @@ def profile(request):
         return HttpResponseRedirect(reverse('shop:login'))
 
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
-    cur_user = False
-    for user in db_users:
-        if user['id'] == cur_user_id:
-            cur_user = user
-            break
-    if not cur_user:
-        return render(request, template, {'error_message': 'my bad'})
-
+    cursor.execute("select * from User where User.id="+str(cur_user_id))
+    data = cursor.fetchone()
+    cur_user= {'id':data[0], 'first_name':data[1], 'last_name':data[2], 'email':data[4], 'phone_number':data[5]}
     if request.method!='POST':
         return render(request, template, {'user':cur_user})
 
@@ -166,10 +175,15 @@ def profile(request):
         if charr not in '1234567890':
             return render(request, template, {'error_message' : 'invalid phone_number' , 'user':cur_user})
 
-    cur_user['first_name'] = request.POST['first_name']
-    cur_user['last_name'] = request.POST['last_name']
-    cur_user['phone_number'] = request.POST['phone_number']
+    # cur_user['first_name'] = request.POST['first_name']
+    # cur_user['last_name'] = request.POST['last_name']
+    # cur_user['phone_number'] = request.POST['phone_number']
+    cursor.execute("UPDATE User SET first_name = '"+request.POST['first_name']+"' , last_name = '"+request.POST['last_name']+"' , phone_number = '"+request.POST['phone_number']+"' WHERE id = "+str(cur_user_id))
 
+
+    cursor.execute("select * from User where User.id="+str(cur_user_id))
+    data = cursor.fetchone()
+    cur_user= {'id':data[0], 'first_name':data[1], 'last_name':data[2], 'email':data[4], 'phone_number':data[5]}
     return render(request, template, {'user':cur_user})
 
 
@@ -181,35 +195,47 @@ def dashboard(request):
 
     template='shop/dashboard.html'
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
-    cur_user = False
-    for user in db_users:
-        if user['id'] == cur_user_id:
-            cur_user = user
-            break
-
-    if not cur_user:
-        return render(request, template, {'error_message':'some thing wrong with cookies', 'cities':db_cities})
-
+    # cur_user = False
+    # for user in db_users:
+    #     if user['id'] == cur_user_id:
+    #         cur_user = user
+    #         break
+    #
+    # if not cur_user:
+    #     return render(request, template, {'error_message':'some thing wrong with cookies', 'cities':db_cities})
+    cursor.execute("select * from User where User.id="+str(cur_user_id))
+    data = cursor.fetchone()
+    cur_user= {'id':data[0], 'first_name':data[1], 'last_name':data[2], 'email':data[4], 'phone_number':data[5]}
     return render(request, template, {'cities':db_cities, 'user':cur_user})
 
 
 def shops_city(request, city_id):
-    cur_city = False
-    for city in db_cities:
-        if city['id'] == city_id:
-            cur_city = city
-            break
+    # cur_city = False
+    # for city in db_cities:
+    #     if city['id'] == city_id:
+    #         cur_city = city
+    #         break
+    #
+    # if not cur_city:
+    #     return render(request, 'shop/shops.html', {'error_message':'invalid city id'})
 
-    if not cur_city:
+    cursor.execute('select * from City where id='+str(city_id))
+    res = cursor.fetchall()
+    if not res:
         return render(request, 'shop/shops.html', {'error_message':'invalid city id'})
+    # city_shops = []
+    # for shop in db_shops:
+    #     print(shop)
+    #     if shop['city_id'] == cur_city['id']:
+    #         city_shops.append(shop)
 
-    city_shops = []
-    for shop in db_shops:
-        print(shop)
-        if shop['city_id'] == cur_city['id']:
-            city_shops.append(shop)
+    cursor.execute("select * from Shop where city_id="+str(city_id))
+    city = {'name' : res[0][1]}
 
-    return render(request, 'shop/shops.html', {'city':cur_city, 'shops':city_shops})
+    data = cursor.fetchall()
+    shops = [{'id':dat[0], 'name':dat[2]}for dat in data]
+
+    return render(request, 'shop/shops.html', {'city':city, 'shops':shops})
 
 def shops_location(request):
     if (request.method != 'POST') or ('geo_x' not in request.POST) or ('geo_y' not in request.POST):
@@ -228,22 +254,30 @@ def shops_location(request):
 
 def shop(request, shop_id):
     template = 'shop/shop.html'
-    cur_shop = False
-    for shop in db_shops:
-        if shop['id'] == shop_id:
-            cur_shop = shop
-            break
+    # cur_shop = False
+    # for shop in db_shops:
+    #     if shop['id'] == shop_id:
+    #         cur_shop = shop
+    #         break
+    #
+    # if not cur_shop:
+    #     return render(request, template, {'error_message':'wrong shop id'})
 
-    if not cur_shop:
+    cursor.execute("select * from Shop where id="+str(shop_id))
+    res = cursor.fetchall()
+    if not res:
         return render(request, template, {'error_message':'wrong shop id'})
-
-    shop_foods=[]
-    for food in db_foods:
-        if food['shop_id'] == shop_id:
-            shop_foods.append(food)
+    # shop_foods=[]
+    # for food in db_foods:
+    #     if food['shop_id'] == shop_id:
+    #         shop_foods.append(food)
     #shop_foods -> with discounted_price
+    cursor.execute("select * from Food where shop_id="+str(shop_id))
+    data = cursor.fetchall()
+    cur_shop = {'name':res[0][2], 'id':res[0][0]}
+    foods=[{'name':dat[4], 'price':dat[3], 'discounted_price':dat[3]*(100-dat[5])/100, 'id':dat[0]} for dat in data]
     if request.method != 'POST':
-        return render(request, template, {'shop':cur_shop, 'foods':shop_foods})
+        return render(request, template, {'shop':cur_shop, 'foods':foods})
     #add or remove item
     #TODO dont buy from 2 shops
     if 'food-shop-cookie' not in request.COOKIES:
@@ -251,14 +285,16 @@ def shop(request, shop_id):
     if not active_cookies.get(request.COOKIES['food-shop-cookie']):
         return HttpResponseRedirect(reverse('shop:login'))
 
+    # cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
+    # cur_user = False
+    # for user in db_users:
+    #     if user['id'] == cur_user_id:
+    #         cur_user = user
+    #         break
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
-    cur_user = False
-    for user in db_users:
-        if user['id'] == cur_user_id:
-            cur_user = user
-            break
-    if not cur_user:
-        return render(request, template, {'error_message': 'my bad'})
+    cursor.execute("select * from User where User.id="+str(cur_user_id))
+    data = cursor.fetchone()
+    cur_user= {'id':data[0], 'first_name':data[1], 'last_name':data[2], 'email':data[4], 'phone_number':data[5]}
     for field in ['food_id', 'count']:
         if not post_validator(request,field):
             return render(request, template, {'error_message' : 'invalid post form : '+field, 'shop':cur_shop, 'foods' : shop_foods})
@@ -270,25 +306,27 @@ def shop(request, shop_id):
     except:
         return render(request, template, {'error_message':'geo_x geo_y bad format', 'shop':cur_shop, 'foods':shop_foods})
 
-    cur_item = False
-    for item in db_got_in_chart:
-        if item['food_id'] == food_id and item['user_id'] == cur_user_id:
-            cur_item = item
+    # cur_item = False
+    # for item in db_got_in_chart:
+    #     if item['food_id'] == food_id and item['user_id'] == cur_user_id:
+    #         cur_item = item
+    cursor.execute("select * from FoodUserRelation where food_id="+str(food_id)+" and user_id= "+ str(cur_user_id))
+    res = cursor.fetchall()
 
-    if not cur_item:
+    if not res:
         if count == 1:
-            cur_item = {'id':len(db_got_in_chart)+1, 'user_id':cur_user_id, 'food_id':food_id, 'count':1}
-            db_got_in_chart.append(cur_item)
+            # cur_item = {'id':len(db_got_in_chart)+1, 'user_id':cur_user_id, 'food_id':food_id, 'count':1}
+            # db_got_in_chart.append(cur_item)
+            cursor.execute("INSERT INTO FoodUserRelation ( user_id , food_id , count)VALUES ('"+str(cur_user_id)+"', "+str(food_id)+" , 1)")
         else:
             return render(request, template, {'error_message':'nothing to remove', 'shop':cur_shop,'foods':shop_foods})
     else:
-        cur_item['count'] += count
-        if item['count'] == 0:
-            for i in range(len(db_got_in_chart)):
-                if db_got_in_chart[i]['id'] == cur_item['id']:
-                    db_got_in_chart.pop(i)
-                    break
-            #TODO remove it
+        cur_count = res[0][3]
+        cur_count += count
+        if cur_count == 0:
+            cursor.execute("delete from FoodUserRelation WHERE id = "+str(res[0][0]) )
+        else:
+            cursor.execute("UPDATE FoodUserRelation SET count = '"+str(cur_count)+"' WHERE id = "+str(res[0][0]))
 
     return render(request, template, {'shop':cur_shop, 'foods':shop_foods})
 
@@ -301,20 +339,24 @@ def addresses(request):
         return HttpResponseRedirect(reverse('shop:login'))
 
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
-    cur_user = False
-    for user in db_users:
-        if user['id'] == cur_user_id:
-            cur_user = user
-            break
-    if not cur_user:
-        return render(request, template, {'error_message': 'my bad'})
-
-    user_addresses = []
-    for address in db_addresses:
-        if address['user_id'] == cur_user_id:
-            user_addresses.append(address)
-
-    if request.method!='POST':
+    # cur_user = False
+    # for user in db_users:
+    #     if user['id'] == cur_user_id:
+    #         cur_user = user
+    #         break
+    # if not cur_user:
+    #     return render(request, template, {'error_message': 'my bad'})
+    cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
+    cursor.execute("select * from User where User.id="+str(cur_user_id))
+    data = cursor.fetchone()
+    cur_user= {'id':data[0], 'first_name':data[1], 'last_name':data[2], 'email':data[4], 'phone_number':data[5]}
+    #
+    # user_addresses = []
+    # for address in db_addresses:
+    #     if address['user_id'] == cur_user_id:
+    #         user_addresses.append(address)
+    cursor.execute("select * from Address where user_id="+str(cur_user_id))
+    if request.method != "POST":
         return render(request, template, {'addresses':user_addresses})
 
     for field in ['city_id', 'text', 'geo_x', 'geo_y']:
@@ -325,9 +367,10 @@ def addresses(request):
         geo_y=float(request.POST['geo_y'])
     except:
         return render(request, template, {'error_message':'geo_x geo_y bad format'})
-    new_address = {'id':len(db_addresses)+1 ,'user_id':cur_user_id, 'city_id': int(request.POST['city_id']), 'text':request.POST['text'], 'geo_x':geo_x, 'geo_y':geo_y}
-    db_addresses.append(new_address)
-    user_addresses.append(new_address)
+    # new_address = {'id':len(db_addresses)+1 ,'user_id':cur_user_id, 'city_id': int(request.POST['city_id']), 'text':request.POST['text'], 'geo_x':geo_x, 'geo_y':geo_y}
+    # db_addresses.append(new_address)
+    # user_addresses.append(new_address)
+    cursor.execute("INSERT INTO Address ( text , city_id , geo_x , geo_y, user_id )VALUES ('"+request.POST['text']+"', "+request.POST['city_id']+" , "+request.POST['geo_x']+" , "+request.POST['geo_y']+", "+str(user_id)+");")
     return render(request, template, {'user_id':cur_user, 'addresses':user_addresses})
 
 
