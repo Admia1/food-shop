@@ -172,4 +172,4 @@ SELECT * FROM kiho.Food JOIN kiho.Shop on kiho.Food.shopid = kiho.Shop.id join k
 
 Select kiho.GetinCart.id , kiho.GetinCart.count , kiho.Food.name , kiho.Food.discount , kiho.Food.percent ,kiho.Food.price from kiho.GetinCart left outer join kiho.Food on (kiho.GetinCart.foodid = kiho.Food.id) WHERE kiho.GetinCart.userid = ID;
 
-Select 
+Select
