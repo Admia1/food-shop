@@ -1,0 +1,37 @@
+{% extends "shop/base.html" %}
+{% block data %}
+<a href="{% url 'shop:logout' %}"class="logout-submit">logout</a>
+{% endblock %}
+{% block content %}
+<div class="container">
+    <form action="{% url 'shop:finalize' %}" method="post">
+        {% csrf_token %}
+        <div class="col-md-8 col-md-offset-2">
+            <div class="panel panel-default">
+                <div class="panel-heading">Finalize</div>
+                <div class="panel-body">
+                    {% if error_message %}
+                        <p class="bg-danger p-d ml-b">{{ error_message }}</p>
+                    {% endif %}
+
+                    <div class="form-group clearfix">
+                        <label class="col-md-4 control-label text-right">Address</label>
+                        <div class="col-md-6">
+                            <input type="number" name="address_id" value="">
+                        </div>
+                    </div>
+                    <div class="form-group clearfix">
+                        <label class="col-md-4 control-label text-right">Discount Code</label>
+                        <div class="col-md-6">
+                            <input type="text" name="discount_code" value="">
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-md-offset-4">
+                        <input type="submit" value="BUY" class="btn btn-success">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -36,9 +36,12 @@ db_cat = [{'id':1, 'name':'hotdog'},
        {'id':4, 'name':'pizza'},
        {'id':5, 'name':'soup'}
     ]
+db_discounts = [{'id':1,'code':'xalix', 'percent':10}] #{'id':2,'code':'xalix', 'percent':10}
+db_discount_user_relation = [{'id':1, 'user_id':0, 'discount_id':1}] #{'id':1, 'user_id':1(0 for all), 'discount_id':1}
 db_addresses = [] #{'id':1,'text':'here', 'city_id':1,'user_id':1, 'x':30, 'y':50}
 db_comments = []
 db_orders = []
+db_order_food_relation = []#{'id':1 , 'food_id':12, 'order_id':2, 'count':3}
 db_got_in_chart = []
 
 
@@ -224,6 +227,7 @@ def shops_location(request):
     return render(request, 'shop/shops.html', {'shops':near_shops})
 
 def shop(request, shop_id):
+    template = 'shop/shop.html'
     cur_shop = False
     for shop in db_shops:
         if shop['id'] == shop_id:
@@ -231,7 +235,7 @@ def shop(request, shop_id):
             break
 
     if not cur_shop:
-        return render(request, 'shop/shop.html', {'error_message':'wrong shop id'})
+        return render(request, template, {'error_message':'wrong shop id'})
 
     shop_foods=[]
     for food in db_foods:
@@ -239,12 +243,25 @@ def shop(request, shop_id):
             shop_foods.append(food)
     #shop_foods -> with discounted_price
     if request.method != 'POST':
-        return render(request, 'shop/shop.html', {'shop':cur_shop, 'foods':shop_foods})
+        return render(request, template, {'shop':cur_shop, 'foods':shop_foods})
     #add or remove item
-    #TODO
+    #TODO dont buy from 2 shops
+    if 'food-shop-cookie' not in request.COOKIES:
+        return HttpResponseRedirect(reverse('shop:login'))
+    if not active_cookies.get(request.COOKIES['food-shop-cookie']):
+        return HttpResponseRedirect(reverse('shop:login'))
+
+    cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
+    cur_user = False
+    for user in db_users:
+        if user['id'] == cur_user_id:
+            cur_user = user
+            break
+    if not cur_user:
+        return render(request, template, {'error_message': 'my bad'})
     for field in ['food_id', 'count']:
         if not post_validator(request,field):
-            return render(request, template, {'error_message' : 'invalid post form : '+field, 'shop':cur_shop, 'foods':shop_foods})
+            return render(request, template, {'error_message' : 'invalid post form : '+field, 'shop':cur_shop, 'foods' : shop_foods})
     try:
         food_id = int(request.POST['food_id'])
         count = int(request.POST['count'])
@@ -260,15 +277,18 @@ def shop(request, shop_id):
 
     if not cur_item:
         if count == 1:
-            new_item = {'id':db_got_in_chart[-1]['id']+1, 'food_id':food_id, count:1}
-            db_got_in_chart.append()
+            cur_item = {'id':len(db_got_in_chart)+1, 'user_id':cur_user_id, 'food_id':food_id, 'count':1}
+            db_got_in_chart.append(cur_item)
         else:
-            return render(request, template, {'error_message':'nothing to remove', 'shop':cur_shop, 'foods':shop_foods})
-
-    item['count'] += count
-    if item['count'] == 0:
-        pass
-        #TODO remove it
+            return render(request, template, {'error_message':'nothing to remove', 'shop':cur_shop,'foods':shop_foods})
+    else:
+        cur_item['count'] += count
+        if item['count'] == 0:
+            for i in range(len(db_got_in_chart)):
+                if db_got_in_chart[i]['id'] == cur_item['id']:
+                    db_got_in_chart.pop(i)
+                    break
+            #TODO remove it
 
     return render(request, template, {'shop':cur_shop, 'foods':shop_foods})
 
@@ -381,12 +401,12 @@ def order(request, order_id):
         return render(request, template, {'error_message':'this order don\'t belong to you!'})
 
     if request.method!='POST':
-        return render(request, template, {'order':order})
+        return render(request, template, {'order':cur_order})
     #else do comment job
 
     for field in ['rate', 'text']:
         if not post_validator(request,field):
-            return render(request, template, {'error_message' : 'invalid post form : '+field, 'order':order})
+            return render(request, template, {'error_message' : 'invalid post form : '+field, 'order':cur_order})
 
     # if no comment
     try:
@@ -394,18 +414,38 @@ def order(request, order_id):
         if rate>5 or rate<1:
             raise 1
     except:
-        return render(request, template, {'error_message':'invalid rate format', 'order':order})
+        return render(request, template, {'error_message':'invalid rate format', 'order':cur_order})
     new_comment = {'id':len(db_comments)+1, 'rate':rate, 'text':request.POST['text']}
     db_comments.append(new_comment)
     order['comment_id'] = new_comment['id']
 
     #TODO show comments of order
-    return render(request, template, {'order':order})
+    return render(request, template, {'order':cur_order})
 
 
 def orders(request):
-    pass
+    template = 'shop/orders.html'
+    if 'food-shop-cookie' not in request.COOKIES:
+        return HttpResponseRedirect(reverse('shop:login'))
+    if not active_cookies.get(request.COOKIES['food-shop-cookie']):
+        return HttpResponseRedirect(reverse('shop:login'))
 
+    cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
+    cur_user = False
+    for user in db_users:
+        if user['id'] == cur_user_id:
+            cur_user = user
+            break
+    if not cur_user:
+        return render(request, template, {'error_message': 'my bad'})
+
+    user_orders = []
+
+    for order in db_orders:
+        if order['user_id'] == cur_user_id:
+            user_orders.append(order)
+
+    return render(request, template, {'orders':user_orders})
 
 
 def finalize(request):
@@ -424,4 +464,74 @@ def finalize(request):
     if not cur_user:
         return render(request, template, {'error_message': 'my bad'})
 
-    pass
+    user_items = []
+
+    for item in db_got_in_chart:
+        if item['user_id'] == cur_user_id:
+            user_items.append(item)
+
+    if not user_items:
+        return render(request, template, {'error_message': 'no item to buy'})
+
+    if request.method != 'POST':
+        return render(request, template, {'items': user_items})
+
+    #request is post
+
+    for field in ['address_id']:
+        if not post_validator(request, field):
+            return render(request, template, {'error_message' : 'invalid post form : '+field,'items': user_items})
+
+    try:
+        cur_address_id = int(request.POST['address_id'])
+    except:
+        return render(request, template, {'error_message' : 'invalid address form', 'items': user_items})
+
+    cur_address = False
+    for address in db_addresses:
+        if address['id'] == cur_address_id:
+            cur_address = address
+            break
+    if cur_address['user_id'] != cur_user_id:
+        return render(request, template, {'error_message' : 'bad address', 'items': user_items})
+
+    if 'discount_code' not in request.POST :
+        return render(request, template, {'error_message' : 'missing discount_code in post', 'items': user_items})
+    if request.POST['discount_code']:
+        cur_discount = False
+        for discount in db_discounts:
+            if discount['code'] == request.POST['discount_code']:
+                cur_discount = discount
+                break
+        if not cur_discount:
+            return render(request, template, {'error_message' : 'invalid discount code', 'items': user_items})
+
+        cur_relation = False
+        for relation in db_discount_user_relation:
+            if relation['discount_id'] == cur_discount['id'] and (relation['user_id']==cur_user_id or relation['user_id']==0):
+                cur_relation = relation
+                break
+
+        if not relation:
+            return render(request, template, {'error_message' : 'this code doesn\'t belong to you', 'items': user_items})
+
+        bad_order = False
+        for order in db_orders:
+            if order['discount_id'] == cur_discount['id']:
+                bad_order = order
+                break;
+        if bad_order:
+            return render(request, template, {'error_message' : 'you used this before', 'items': user_items})
+        cur_discount_id = cur_discount['id']
+    else:
+        cur_discount_id = 0
+
+    new_order = {'id':len(db_orders)+1, 'user_id':cur_user_id, 'discount_id':cur_discount_id, 'comment_id':0, 'status':0, 'address_id':cur_address['id']}
+    db_orders.append(new_order)
+    for item in user_items:
+        db_order_food_relation.append({'id':len(db_order_food_relation)+1, 'order_id':new_order['id'], 'food_id':item['food_id'], 'count':item['count']})
+
+    for item in user_items:
+        #remove items
+        pass
+    return HttpResponseRedirect(reverse('shop:orders'))

@@ -10,6 +10,7 @@
               <p class="bg-danger p-d ml-b">{{ error_message }}</p>
           {% endif %}
           <div class="col-md-12 col-md-offset-0">
+            <a href="{% url 'shop:finalize' %}">Finilize</a>
             <table class="table">
               <tbody>
                 <tr>
@@ -25,7 +26,8 @@
                   <td>{{food.cat_id}}</td>
                   <td style="color:red">{{food.discounted_price}}$</td>
                   <td>{{food.price}}$</td>
-                  <th><form action="{% url 'shop:shop' 'shop.id' %}" method="post"><input hidden value="1" name="count"><input hidden name="food_id" value="{{food.id}}"><input type="submit" name="" value="+"></form></th>
+                  <th><form action="{% url 'shop:shop' shop.id %}" method="post"><input hidden value="1" name="count"><input hidden name="food_id" value="{{food.id}}">{%csrf_token%}<input type="submit" name="" value="+"></form>
+                  <form action="{% url 'shop:shop' shop.id %}" method="post"><input hidden value="-1" name="count"><input hidden name="food_id" value="{{food.id}}">{%csrf_token%}<input type="submit" name="" value="-"></form></th>
                 </tr>
                 {% endfor %}
               </tbody>
