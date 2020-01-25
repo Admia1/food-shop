@@ -356,12 +356,15 @@ def addresses(request):
     #     if address['user_id'] == cur_user_id:
     #         user_addresses.append(address)
     cursor.execute("select * from Address where user_id="+str(cur_user_id))
+    data = cursor.fetchall()
+    user_addresses = [{'id':dat[0], 'text':dat[1], 'city_id':data[2], 'user_id':data[3], 'geo_x':data[4], 'geo_y':data[5]}for dat in data]
     if request.method != "POST":
         return render(request, template, {'addresses':user_addresses})
 
+
     for field in ['city_id', 'text', 'geo_x', 'geo_y']:
         if not post_validator(request,field):
-            return render(request, template, {'error_message' : 'invalid post form : '+field, 'addresses':cur_user_addresses})
+            return render(request, template, {'error_message' : 'invalid post form : '+field, 'addresses':user_addresses})
     try:
         geo_x=float(request.POST['geo_x'])
         geo_y=float(request.POST['geo_y'])
