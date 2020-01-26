@@ -297,14 +297,14 @@ def shop(request, shop_id):
     cur_user= {'id':data[0], 'first_name':data[1], 'last_name':data[2], 'email':data[4], 'phone_number':data[5]}
     for field in ['food_id', 'count']:
         if not post_validator(request,field):
-            return render(request, template, {'error_message' : 'invalid post form : '+field, 'shop':cur_shop, 'foods' : shop_foods})
+            return render(request, template, {'error_message' : 'invalid post form : '+field, 'shop':cur_shop, 'foods' : foods})
     try:
         food_id = int(request.POST['food_id'])
         count = int(request.POST['count'])
         if count not in [1,-1]:
             raise 1
     except:
-        return render(request, template, {'error_message':'geo_x geo_y bad format', 'shop':cur_shop, 'foods':shop_foods})
+        return render(request, template, {'error_message':'geo_x geo_y bad format', 'shop':cur_shop, 'foods':foods})
 
     # cur_item = False
     # for item in db_got_in_chart:
@@ -319,7 +319,7 @@ def shop(request, shop_id):
             # db_got_in_chart.append(cur_item)
             cursor.execute("INSERT INTO FoodUserRelation ( user_id , food_id , count)VALUES ('"+str(cur_user_id)+"', "+str(food_id)+" , 1)")
         else:
-            return render(request, template, {'error_message':'nothing to remove', 'shop':cur_shop,'foods':shop_foods})
+            return render(request, template, {'error_message':'nothing to remove', 'shop':cur_shop,'foods':foods})
     else:
         cur_count = res[0][3]
         cur_count += count
@@ -328,7 +328,7 @@ def shop(request, shop_id):
         else:
             cursor.execute("UPDATE FoodUserRelation SET count = '"+str(cur_count)+"' WHERE id = "+str(res[0][0]))
 
-    return render(request, template, {'shop':cur_shop, 'foods':shop_foods})
+    return render(request, template, {'shop':cur_shop, 'foods':foods})
 
 
 def addresses(request):
@@ -346,7 +346,7 @@ def addresses(request):
     #         break
     # if not cur_user:
     #     return render(request, template, {'error_message': 'my bad'})
-    cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
+    # cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
     cursor.execute("select * from User where User.id="+str(cur_user_id))
     data = cursor.fetchone()
     cur_user= {'id':data[0], 'first_name':data[1], 'last_name':data[2], 'email':data[4], 'phone_number':data[5]}
@@ -357,7 +357,7 @@ def addresses(request):
     #         user_addresses.append(address)
     cursor.execute("select * from Address where user_id="+str(cur_user_id))
     data = cursor.fetchall()
-    user_addresses = [{'id':dat[0], 'text':dat[1], 'city_id':data[2], 'user_id':data[3], 'geo_x':data[4], 'geo_y':data[5]}for dat in data]
+    user_addresses = [{'id':dat[0], 'text':dat[1], 'city_id':dat[2], 'user_id':dat[3], 'geo_x':dat[4], 'geo_y':dat[5]}for dat in data]
     if request.method != "POST":
         return render(request, template, {'addresses':user_addresses})
 
@@ -373,8 +373,8 @@ def addresses(request):
     # new_address = {'id':len(db_addresses)+1 ,'user_id':cur_user_id, 'city_id': int(request.POST['city_id']), 'text':request.POST['text'], 'geo_x':geo_x, 'geo_y':geo_y}
     # db_addresses.append(new_address)
     # user_addresses.append(new_address)
-    cursor.execute("INSERT INTO Address ( text , city_id , geo_x , geo_y, user_id )VALUES ('"+request.POST['text']+"', "+request.POST['city_id']+" , "+request.POST['geo_x']+" , "+request.POST['geo_y']+", "+str(user_id)+");")
-    return render(request, template, {'user_id':cur_user, 'addresses':user_addresses})
+    cursor.execute("INSERT INTO Address ( text , city_id , geo_x , geo_y, user_id )VALUES ('"+request.POST['text']+"', "+request.POST['city_id']+" , "+request.POST['geo_x']+" , "+request.POST['geo_y']+", "+str(cur_user_id)+");")
+    return render(request, template, {'user':cur_user, 'addresses':user_addresses})
 
 
 def address(request, address_id):
@@ -385,20 +385,24 @@ def address(request, address_id):
         return HttpResponseRedirect(reverse('shop:login'))
 
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
-    cur_user = False
-    for user in db_users:
-        if user['id'] == cur_user_id:
-            cur_user = user
-            break
-    if not cur_user:
-        return render(request, template, {'error_message': 'my bad'})
+    # cur_user = False
+    # for user in db_users:
+    #     if user['id'] == cur_user_id:
+    #         cur_user = user
+    #         break
+    # if not cur_user:
+    #     return render(request, template, {'error_message': 'my bad'})
 
-    cur_address = False
-    for address in db_addresses:
-        if address['id'] == address_id:
-            cur_address = address
-    if not cur_address:
+    # cur_address = False
+    # for address in db_addresses:
+    #     if address['id'] == address_id:
+    #         cur_address = address
+    cursor.execute("select * from Address where user_id="+str(cur_user_id)+" and id="+str(address_id))
+    data = cursor.fetchall()
+    if not data:
         return render(request, template, {'error_message':'wrong address id'})
+    data=data[0]
+    cur_address = {'id':data[0], 'text':data[1], 'city_id':data[2], 'user_id':data[3], 'geo_x':data[4], 'geo_y':data[5]}
     if cur_address['user_id'] != cur_user_id:
         return render(request, template, {'error_message':'this address don\'t belong to you!'})
 
@@ -416,10 +420,11 @@ def address(request, address_id):
     except:
         return render(request, template, {'error_message':'geo_x geo_y bad format'})
     new_address = {'id':cur_address['id'] , 'user_id':cur_user_id, 'city_id': int(request.POST['city_id']), 'text':request.POST['text'], 'geo_x':geo_x, 'geo_y':geo_y}
+    cursor.execute("UPDATE Address SET city_id="+request.POST['city_id']+" text='"+request.POST['text']+"' geo_x="+request.POST['geo_x']+" geo_y="+request.POST['geo_y']+" where id ="+str(address_id))
     #change address
-    for x in cur_address:
-        cur_address[x]=new_address[x]
-    return render(request, template, {'address': cur_address})
+    # for x in cur_address:
+    #     cur_address[x]=new_address[x]
+    return render(request, template, {'address': new_address})
 
 def order(request, order_id):
     template = 'shop/order.html'
@@ -429,20 +434,23 @@ def order(request, order_id):
         return HttpResponseRedirect(reverse('shop:login'))
 
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
-    cur_user = False
-    for user in db_users:
-        if user['id'] == cur_user_id:
-            cur_user = user
-            break
-    if not cur_user:
-        return render(request, template, {'error_message': 'my bad'})
+    # cur_user = False
+    # for user in db_users:
+    #     if user['id'] == cur_user_id:
+    #         cur_user = user
+    #         break
+    # if not cur_user:
+    #     return render(request, template, {'error_message': 'my bad'})
 
     cur_order = False
-    for order in db_orders:
-        if order['user_id'] == cur_user_id:
-            cur_order = order
-    if not cur_order:
+    # for order in db_orders:
+    #     if order['user_id'] == cur_user_id:
+    #         cur_order = order
+    cursor.execute("select * from Order where user_id="+str(cur_user_id))
+    data=cursor.fetchall()
+    if not data:
         return render(request, template, {'error_message':'wrong order id'})
+    cur_order={'id':data[0], 'user_id':data[1], 'shop_id':data[2], 'address_id':data[3], 'dis_id':data[4], 'comment_id':data[5], 'status':data[6]}
     if cur_order['user_id'] != cur_user_id:
         return render(request, template, {'error_message':'this order don\'t belong to you!'})
 
@@ -462,9 +470,12 @@ def order(request, order_id):
     except:
         return render(request, template, {'error_message':'invalid rate format', 'order':cur_order})
     new_comment = {'id':len(db_comments)+1, 'rate':rate, 'text':request.POST['text']}
-    db_comments.append(new_comment)
-    order['comment_id'] = new_comment['id']
-
+    # db_comments.append(new_comment)
+    # order['comment_id'] = new_comment['id']
+    cursor.execute("INSERT INTO Comment (rate, text) VALUES ("+request.POST['rate']+", '"+request.POST['text']+"')")
+    cursor.execute("SELECT * FROM Commment where text='"+request.POST['text']+"' and rate="+request.POST['rate'])
+    new_comment_id = cursor.fetchall()[0][0]
+    cursor.execute("UPDATE Order SET comment_id="+str(new_comment_id)+" where id = order_id")
     #TODO show comments of order
     return render(request, template, {'order':cur_order})
 
@@ -477,20 +488,22 @@ def orders(request):
         return HttpResponseRedirect(reverse('shop:login'))
 
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
-    cur_user = False
-    for user in db_users:
-        if user['id'] == cur_user_id:
-            cur_user = user
-            break
-    if not cur_user:
-        return render(request, template, {'error_message': 'my bad'})
-
-    user_orders = []
-
-    for order in db_orders:
-        if order['user_id'] == cur_user_id:
-            user_orders.append(order)
-
+    # cur_user = False
+    # for user in db_users:
+    #     if user['id'] == cur_user_id:
+    #         cur_user = user
+    #         break
+    # if not cur_user:
+    #     return render(request, template, {'error_message': 'my bad'})
+    #
+    # user_orders = []
+    #
+    # for order in db_orders:
+    #     if order['user_id'] == cur_user_id:
+    #         user_orders.append(order)
+    cursor.execute("SELECT * FROM Order where user_id="+str(cur_user_id))
+    data = cursor.fetchall()
+    user_orders = [{'id':dat[0], 'user_id':dat[1], 'shop_id':dat[2], 'address_id':dat[3], 'dis_id':dat[4], 'comment_id':dat[5], 'status':dat[6]} for dat in data]
     return render(request, template, {'orders':user_orders})
 
 
@@ -502,23 +515,26 @@ def finalize(request):
         return HttpResponseRedirect(reverse('shop:login'))
 
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
-    cur_user = False
-    for user in db_users:
-        if user['id'] == cur_user_id:
-            cur_user = user
-            break
-    if not cur_user:
-        return render(request, template, {'error_message': 'my bad'})
+    # cur_user = False
+    # for user in db_users:
+    #     if user['id'] == cur_user_id:
+    #         cur_user = user
+    #         break
+    # if not cur_user:
+    #     return render(request, template, {'error_message': 'my bad'})
+    #
+    # user_items = []
+    #
+    # for item in db_got_in_chart:
+    #     if item['user_id'] == cur_user_id:
+    #         user_items.append(item)
 
-    user_items = []
+    cursor.execute("select FoodUserRelation.*, Food.shop_id, Food.price*(100-Food.discount)/100 from FoodUserRelation join Food on FoodUserRelation.food_id = Food.id and FoodUserRelation.user_id= "+str(cur_user_id))
+    res = cursor.fetchall()
 
-    for item in db_got_in_chart:
-        if item['user_id'] == cur_user_id:
-            user_items.append(item)
-
-    if not user_items:
+    if not res:
         return render(request, template, {'error_message': 'no item to buy'})
-
+    user_items = [{'id':dat[0], 'food_id':dat[2], 'count':dat[3],'shop_id':dat[-2], 'discounted_price':dat[-1]} for dat in res]
     if request.method != 'POST':
         return render(request, template, {'items': user_items})
 
@@ -533,51 +549,68 @@ def finalize(request):
     except:
         return render(request, template, {'error_message' : 'invalid address form', 'items': user_items})
 
-    cur_address = False
-    for address in db_addresses:
-        if address['id'] == cur_address_id:
-            cur_address = address
-            break
-    if cur_address['user_id'] != cur_user_id:
+    # cur_address = False
+    # for address in db_addresses:
+    #     if address['id'] == cur_address_id:
+    #         cur_address = address
+    #         break
+    # if cur_address['user_id'] != cur_user_id:
+    #     return render(request, template, {'error_message' : 'bad address', 'items': user_items})
+    cursor.execute("SELECT * from Address WHERE user_id="+str(cur_user_id)+" and id="+request.POST['address_id'])
+    res = cursor.fetchall()
+    if not res:
         return render(request, template, {'error_message' : 'bad address', 'items': user_items})
 
     if 'discount_code' not in request.POST :
         return render(request, template, {'error_message' : 'missing discount_code in post', 'items': user_items})
     if request.POST['discount_code']:
-        cur_discount = False
-        for discount in db_discounts:
-            if discount['code'] == request.POST['discount_code']:
-                cur_discount = discount
-                break
-        if not cur_discount:
+        # cur_discount = Falsede
+        # for discount in db_discounts:
+        #     if discount['code'] == request.POST['discount_code']:
+        #         cur_discount = discount
+        #         break
+        cursor.execute("SELECT Discount.id, Discount.percent from Discount join DiscountUserRelation on Discount.id = DiscountUserRelation.dis_id where Discount.code ='"+request.POST['discount_code']+"' and DiscountUserRelation.user_id IS NULL or DiscountUserRelation.user_id="+str(cur_user_id))
+        data = cursor.fetchall()
+        # if not cur_discount:
+        if not data:
             return render(request, template, {'error_message' : 'invalid discount code', 'items': user_items})
-
-        cur_relation = False
-        for relation in db_discount_user_relation:
-            if relation['discount_id'] == cur_discount['id'] and (relation['user_id']==cur_user_id or relation['user_id']==0):
-                cur_relation = relation
-                break
-
-        if not relation:
-            return render(request, template, {'error_message' : 'this code doesn\'t belong to you', 'items': user_items})
-
-        bad_order = False
-        for order in db_orders:
-            if order['discount_id'] == cur_discount['id']:
-                bad_order = order
-                break;
-        if bad_order:
+        data=data[0]
+        cur_discount = {'id':data[0], 'percent':data[1]}
+        # cur_relation = False
+        # for relation in db_discount_user_relation:
+        #     if relation['discount_id'] == cur_discount['id'] and (relation['user_id']==cur_user_id or relation['user_id']==0):
+        #         cur_relation = relation
+        #         break
+        #
+        # if not relation:
+        #     return render(request, template, {'error_message' : 'this code doesn\'t belong to you', 'items': user_items})
+        #
+        # bad_order = False
+        # for order in db_orders:
+        #     if order['discount_id'] == cur_discount['id']:
+        #         bad_order = order
+        #         break;
+        cursor.execute("SELECT * FROM Order WHERE discount_id="+str(cur_discount['id']))
+        data = cursor.fetchall()
+        # if bad_order:
+        if data:
             return render(request, template, {'error_message' : 'you used this before', 'items': user_items})
         cur_discount_id = cur_discount['id']
+        cursor.execute("INSERT INTO Order (user_id, shop_id, address_id, dis_id, comment_id, status) VALUES ("+str(cur_user_id)+", "+str(user_items[0]['shop_id'])+", "+request.POST['address_id']+","+str(cur_discount_id)+", NULL, 0)")
+
     else:
         cur_discount_id = 0
+        cursor.execute("INSERT INTO Order (user_id, shop_id, address_id, dis_id, comment_id, status) VALUES ("+str(cur_user_id)+", "+str(user_items[0]['shop_id'])+", "+request.POST['address_id']+", NULL, NULL, 0)")
+    #new_order = {'id':len(db_orders)+1, 'user_id':cur_user_id, 'discount_id':cur_discount_id, 'comment_id':0, 'status':0, 'address_id':cur_address['id']}
+    #db_orders.append(new_order)
 
-    new_order = {'id':len(db_orders)+1, 'user_id':cur_user_id, 'discount_id':cur_discount_id, 'comment_id':0, 'status':0, 'address_id':cur_address['id']}
-    db_orders.append(new_order)
-    for item in user_items:
-        db_order_food_relation.append({'id':len(db_order_food_relation)+1, 'order_id':new_order['id'], 'food_id':item['food_id'], 'count':item['count']})
-
-    for item in user_items:
-        #remove items
-        pass
+    cursor.execute("select * from orders where order.id="+str(cur_user_id))
+    cur_order_id = cursor.fetchall()[-1][0]
+    # for item in user_items:
+    #     db_order_food_relation.append({'id':len(db_order_food_relation)+1, 'order_id':new_order['id'], 'food_id':item['food_id'], 'count':item['count']})
+    cursor.execute("INSERT INTO OrderFoodRelation(food_id, order_id, count) SELECT FoodUserRelation.food_id,"+str(cur_order_id)+",FoodUserRelation.count from FoodUserRelation where FoodUserRelation.user_id ="+str(cur_user_id))
+    # for item in user_items:
+    #     #remove items
+    #     pass
+    cursor.execute("DELETE FROM FoodUserRelation WHERE FoodUserRelation.user_id="+str(cur_user_id))
     return HttpResponseRedirect(reverse('shop:orders'))

@@ -77,6 +77,7 @@ CREATE TABLE food_shop.FoodUserRelation(
 
 CREATE TABLE food_shop.Comment (
  id     INTEGER  PRIMARY KEY AUTO_INCREMENT,
+ rate   INTEGER NOT NULL,
  text     TEXT);
 
 CREATE TABLE food_shop.Order (

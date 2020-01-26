@@ -87,12 +87,12 @@ VALUES (3, 1, 3);
 INSERT INTO food_shop.FoodUserRelation (user_id, food_id, count)
 VALUES (2, 1, 3);
 
-
-INSERT INTO food_shop.Comment (text)
-VALUES ('man too ghaza soosk didam');
-
-INSERT INTO food_shop.Comment (text)
-VALUES ('man too sooskam ghaza bood');
-
-INSERT INTO food_shop.Comment (text)
-VALUES ('ghaza mooyi mooyi bood');
+-- 
+-- INSERT INTO food_shop.Comment (text)
+-- VALUES ('man too ghaza soosk didam');
+--
+-- INSERT INTO food_shop.Comment (text)
+-- VALUES ('man too sooskam ghaza bood');
+--
+-- INSERT INTO food_shop.Comment (text)
+-- VALUES ('ghaza mooyi mooyi bood');
