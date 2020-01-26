@@ -90,12 +90,12 @@ def register(request):
     #to do name validator
     #to do phone number validator
     #to do password
-    cursor.execute("select * from User where email ='" + request.POST['email']+"'")
+    cursor.execute(f"select * from User where email ='{request.POST['email']}'")
     res = cursor.fetchall()
     if res:
         return render(request, template, {'error_message' : 'invalid post : you registered before'})
-    cursor.execute("INSERT INTO User (first_name, last_name, password, email , phone_number) VALUES ('" +request.POST['first_name']+"' , '"+request.POST['last_name']+"' , '"+request.POST['password']+"' , '"+request.POST['email']+"' , '"+request.POST['phone_number']+"' )")
-    cursor.execute("select * from User where email='"+request.POST['email']+"'")
+    cursor.execute(f"INSERT INTO User (first_name, last_name, password, email , phone_number) VALUES ('" +request.POST['first_name']+"' , '"+request.POST['last_name']+"' , '"+request.POST['password']+"' , '"+request.POST['email']+"' , '"+request.POST['phone_number']+"' )")
+    cursor.execute(f"select * from User where email='{request.POST['email']}'")
     new_user_id = cursor.fetchall()[0][0]
     t = loader.get_template('shop/login.html')
     content = {'logged_in': True, 'error_message':'you logged in'}
@@ -119,7 +119,7 @@ def login(request):
     if ('email' not in request.POST) or ('password' not in request.POST):
         return render(request, template, {'error_message' : "bad post format", 'logged_in' : False})
 
-    cursor.execute("select * from User where email='"+ request.POST['email'] +"' and password='"+ request.POST['password'] +"'")
+    cursor.execute(f"select * from User where email='{request.POST['email']}' and password='{request.POST['password']}'")
     res= cursor.fetchall()
     if not res:
         return render(request, template, {'error_message' : "Wrong email or password", 'logged_in' : False})
@@ -147,7 +147,7 @@ def profile(request):
         return HttpResponseRedirect(reverse('shop:login'))
 
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
-    cursor.execute("select * from User where User.id="+str(cur_user_id))
+    cursor.execute(f"select * from User where User.id={cur_user_id}")
     data = cursor.fetchone()
     cur_user= {'id':data[0], 'first_name':data[1], 'last_name':data[2], 'email':data[4], 'phone_number':data[5]}
     if request.method!='POST':
@@ -161,10 +161,10 @@ def profile(request):
         if charr not in '1234567890':
             return render(request, template, {'error_message' : 'invalid phone_number' , 'user':cur_user})
 
-    cursor.execute("UPDATE User SET first_name = '"+request.POST['first_name']+"' , last_name = '"+request.POST['last_name']+"' , phone_number = '"+request.POST['phone_number']+"' WHERE id = "+str(cur_user_id))
+    cursor.execute(f"UPDATE User SET first_name = '{request.POST['first_name']}' , last_name = '{request.POST['last_name']}' , phone_number = '{request.POST['phone_number']}' WHERE id = {cur_user_id}")
 
 
-    cursor.execute("select * from User where User.id="+str(cur_user_id))
+    cursor.execute(f"select * from User where User.id={cur_user_id}")
     data = cursor.fetchone()
     cur_user= {'id':data[0], 'first_name':data[1], 'last_name':data[2], 'email':data[4], 'phone_number':data[5]}
     return render(request, template, {'user':cur_user})
@@ -179,7 +179,7 @@ def dashboard(request):
     template='shop/dashboard.html'
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
 
-    cursor.execute("select * from User where User.id="+str(cur_user_id))
+    cursor.execute(f"select * from User where User.id={cur_user_id}")
     data = cursor.fetchone()
     cur_user= {'id':data[0], 'first_name':data[1], 'last_name':data[2], 'email':data[4], 'phone_number':data[5]}
     return render(request, template, {'cities':db_cities, 'user':cur_user})
@@ -187,12 +187,12 @@ def dashboard(request):
 
 def shops_city(request, city_id):
 
-    cursor.execute('select * from City where id='+str(city_id))
+    cursor.execute(f"select * from City where id={city_id}")
     res = cursor.fetchall()
     if not res:
         return render(request, 'shop/shops.html', {'error_message':'invalid city id'})
 
-    cursor.execute("select * from Shop where city_id="+str(city_id))
+    cursor.execute(f"select * from Shop where city_id={city_id}")
     city = {'name' : res[0][1]}
 
     data = cursor.fetchall()
@@ -218,12 +218,12 @@ def shops_location(request):
 def shop(request, shop_id):
     template = 'shop/shop.html'
 
-    cursor.execute("select * from Shop where id="+str(shop_id))
+    cursor.execute(f"select * from Shop where id={shop_id}")
     res = cursor.fetchall()
     if not res:
         return render(request, template, {'error_message':'wrong shop id'})
 
-    cursor.execute("select * from Food where shop_id="+str(shop_id))
+    cursor.execute(f"select * from Food where shop_id={shop_id}")
     data = cursor.fetchall()
     cur_shop = {'name':res[0][2], 'id':res[0][0]}
     foods=[{'name':dat[4], 'price':dat[3], 'discounted_price':dat[3]*(100-dat[5])/100, 'id':dat[0]} for dat in data]
@@ -237,7 +237,7 @@ def shop(request, shop_id):
         return HttpResponseRedirect(reverse('shop:login'))
 
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
-    cursor.execute("select * from User where User.id="+str(cur_user_id))
+    cursor.execute(f"select * from User where User.id={cur_user_id}")
     data = cursor.fetchone()
     cur_user= {'id':data[0], 'first_name':data[1], 'last_name':data[2], 'email':data[4], 'phone_number':data[5]}
     for field in ['food_id', 'count']:
@@ -251,21 +251,21 @@ def shop(request, shop_id):
     except:
         return render(request, template, {'error_message':'geo_x geo_y bad format', 'shop':cur_shop, 'foods':foods})
 
-    cursor.execute("select * from FoodUserRelation where food_id="+str(food_id)+" and user_id= "+ str(cur_user_id))
+    cursor.execute(f"select * from FoodUserRelation where food_id={food_id} and user_id={str(cur_user_id)}")
     res = cursor.fetchall()
 
     if not res:
         if count == 1:
-            cursor.execute("INSERT INTO FoodUserRelation ( user_id , food_id , count)VALUES ('"+str(cur_user_id)+"', "+str(food_id)+" , 1)")
+            cursor.execute(f"INSERT INTO FoodUserRelation ( user_id , food_id , count)VALUES ({cur_user_id},{food_id},1)")
         else:
             return render(request, template, {'error_message':'nothing to remove', 'shop':cur_shop,'foods':foods})
     else:
         cur_count = res[0][3]
         cur_count += count
         if cur_count == 0:
-            cursor.execute("delete from FoodUserRelation WHERE id = "+str(res[0][0]) )
+            cursor.execute(f"delete from FoodUserRelation WHERE id = {res[0][0]}")
         else:
-            cursor.execute("UPDATE FoodUserRelation SET count = '"+str(cur_count)+"' WHERE id = "+str(res[0][0]))
+            cursor.execute(f"UPDATE FoodUserRelation SET count = {cur_count} WHERE id = {res[0][0]}")
 
     return render(request, template, {'shop':cur_shop, 'foods':foods})
 
@@ -278,11 +278,11 @@ def addresses(request):
         return HttpResponseRedirect(reverse('shop:login'))
 
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
-    cursor.execute("select * from User where User.id="+str(cur_user_id))
+    cursor.execute(f"select * from User where User.id={cur_user_id}")
     data = cursor.fetchone()
     cur_user= {'id':data[0], 'first_name':data[1], 'last_name':data[2], 'email':data[4], 'phone_number':data[5]}
 
-    cursor.execute("select * from Address where user_id="+str(cur_user_id))
+    cursor.execute(f"select * from Address where user_id={cur_user_id}")
     data = cursor.fetchall()
     user_addresses = [{'id':dat[0], 'text':dat[1], 'city_id':dat[2], 'user_id':dat[3], 'geo_x':dat[4], 'geo_y':dat[5]}for dat in data]
     if request.method != "POST":
@@ -298,7 +298,7 @@ def addresses(request):
     except:
         return render(request, template, {'error_message':'geo_x geo_y bad format'})
 
-    cursor.execute("INSERT INTO Address ( text , city_id , geo_x , geo_y, user_id )VALUES ('"+request.POST['text']+"', "+request.POST['city_id']+" , "+request.POST['geo_x']+" , "+request.POST['geo_y']+", "+str(cur_user_id)+");")
+    cursor.execute(f"INSERT INTO Address ( text , city_id , geo_x , geo_y, user_id )VALUES ('{request.POST['text']}',{request.POST['city_id']},{request.POST['geo_x']} ,{request.POST['geo_y']},{cur_user_id})")
     return render(request, template, {'user':cur_user, 'addresses':user_addresses})
 
 
@@ -311,7 +311,7 @@ def address(request, address_id):
 
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
 
-    cursor.execute("select * from Address where user_id="+str(cur_user_id)+" and id="+str(address_id))
+    cursor.execute(f"select * from Address where user_id={cur_user_id} and id={address_id}")
     data = cursor.fetchall()
     if not data:
         return render(request, template, {'error_message':'wrong address id'})
@@ -334,7 +334,7 @@ def address(request, address_id):
     except:
         return render(request, template, {'error_message':'geo_x geo_y bad format'})
     new_address = {'id':cur_address['id'] , 'user_id':cur_user_id, 'city_id': int(request.POST['city_id']), 'text':request.POST['text'], 'geo_x':geo_x, 'geo_y':geo_y}
-    cursor.execute("UPDATE Address SET city_id="+request.POST['city_id']+" text='"+request.POST['text']+"' geo_x="+request.POST['geo_x']+" geo_y="+request.POST['geo_y']+" where id ="+str(address_id)+";")
+    cursor.execute(f"UPDATE Address SET city_id={request.POST['city_id']} text='{request.POST['text']}' geo_x={request.POST['geo_x']} geo_y={request.POST['geo_y']} where id ={address_id}")
 
     return HttpResponseRedirect(reverse('shop:address', address_id))
 
@@ -350,7 +350,7 @@ def order(request, order_id):
     cur_order = False
 
 
-    cursor.execute("select * from Order where user_id="+str(cur_user_id))
+    cursor.execute(f"select * from Order where user_id={cur_user_id}")
     data=cursor.fetchall()
     if not data:
         return render(request, template, {'error_message':'wrong order id'})
@@ -375,10 +375,10 @@ def order(request, order_id):
         return render(request, template, {'error_message':'invalid rate format', 'order':cur_order})
     new_comment = {'id':len(db_comments)+1, 'rate':rate, 'text':request.POST['text']}
 
-    cursor.execute("INSERT INTO Comment (rate, text) VALUES ("+request.POST['rate']+", '"+request.POST['text']+"')")
-    cursor.execute("SELECT * FROM Commment where text='"+request.POST['text']+"' and rate="+request.POST['rate'])
+    cursor.execute(f"INSERT INTO Comment (rate, text) VALUES ({request.POST['rate']}, '{request.POST['text']}')")
+    cursor.execute(f"SELECT * FROM Commment where text='{request.POST['text']}' and rate={request.POST['rate']}")
     new_comment_id = cursor.fetchall()[0][0]
-    cursor.execute("UPDATE Order SET comment_id="+str(new_comment_id)+" where id = order_id")
+    cursor.execute(f"UPDATE Order SET comment_id={new_comment_id} where id = {order_id}")
     #TODO show comments of order
     return render(request, template, {'order':cur_order})
 
@@ -393,7 +393,7 @@ def orders(request):
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
 
 
-    cursor.execute("SELECT * FROM Order where user_id="+str(cur_user_id))
+    cursor.execute(f"SELECT * FROM Order where user_id={cur_user_id}")
     data = cursor.fetchall()
     user_orders = [{'id':dat[0], 'user_id':dat[1], 'shop_id':dat[2], 'address_id':dat[3], 'dis_id':dat[4], 'comment_id':dat[5], 'status':dat[6]} for dat in data]
     return render(request, template, {'orders':user_orders})
@@ -410,7 +410,7 @@ def finalize(request):
 
 
 
-    cursor.execute("select FoodUserRelation.*, Food.shop_id, Food.price*(100-Food.discount)/100 from FoodUserRelation join Food on FoodUserRelation.food_id = Food.id and FoodUserRelation.user_id= "+str(cur_user_id))
+    cursor.execute(f"select FoodUserRelation.*, Food.shop_id, Food.price*(100-Food.discount)/100 from FoodUserRelation join Food on FoodUserRelation.food_id = Food.id and FoodUserRelation.user_id= {cur_user_id}")
     res = cursor.fetchall()
 
     if not res:
@@ -431,7 +431,7 @@ def finalize(request):
         return render(request, template, {'error_message' : 'invalid address form', 'items': user_items})
 
 
-    cursor.execute("SELECT * from Address WHERE user_id="+str(cur_user_id)+" and id="+request.POST['address_id'])
+    cursor.execute(f"SELECT * from Address WHERE user_id={str(cur_user_id)} and id={request.POST['address_id']}")
     res = cursor.fetchall()
     if not res:
         return render(request, template, {'error_message' : 'bad address', 'items': user_items})
@@ -441,7 +441,7 @@ def finalize(request):
     if request.POST['discount_code']:
 
 
-        cursor.execute("SELECT Discount.id, Discount.percent from Discount join DiscountUserRelation on Discount.id = DiscountUserRelation.dis_id where Discount.code ='"+request.POST['discount_code']+"' and DiscountUserRelation.user_id IS NULL or DiscountUserRelation.user_id="+str(cur_user_id))
+        cursor.execute(f"SELECT Discount.id, Discount.percent from Discount join DiscountUserRelation on Discount.id = DiscountUserRelation.dis_id where Discount.code ='{request.POST['discount_code']}' and DiscountUserRelation.user_id IS NULL or DiscountUserRelation.user_id={cur_user_id}")
         data = cursor.fetchall()
         # if not cur_discount:
         if not data:
@@ -450,23 +450,23 @@ def finalize(request):
         cur_discount = {'id':data[0], 'percent':data[1]}
 
 
-        cursor.execute("SELECT * FROM Order WHERE discount_id="+str(cur_discount['id']))
+        cursor.execute(f"SELECT * FROM Order WHERE discount_id={cur_discount['id']}")
         data = cursor.fetchall()
         # if bad_order:
         if data:
             return render(request, template, {'error_message' : 'you used this before', 'items': user_items})
         cur_discount_id = cur_discount['id']
-        cursor.execute("INSERT INTO Order (user_id, shop_id, address_id, dis_id, comment_id, status) VALUES ("+str(cur_user_id)+", "+str(user_items[0]['shop_id'])+", "+request.POST['address_id']+","+str(cur_discount_id)+", NULL, 0)")
+        cursor.execute(f"INSERT INTO Order (user_id, shop_id, address_id, dis_id, comment_id, status) VALUES ({cur_user_id}, {user_items[0]['shop_id']}, {request.POST['address_id']}, {cur_discount_id}, NULL, 0)")
 
     else:
         cur_discount_id = 0
-        cursor.execute("INSERT INTO Order (user_id, shop_id, address_id, dis_id, comment_id, status) VALUES ("+str(cur_user_id)+", "+str(user_items[0]['shop_id'])+", "+request.POST['address_id']+", NULL, NULL, 0)")
+        cursor.execute(f"INSERT INTO Order (user_id, shop_id, address_id, dis_id, comment_id, status) VALUES ({cur_user_id},{user_items[0]['shop_id']}, {request.POST['address_id']}, NULL, NULL, 0)")
 
 
-    cursor.execute("select * from orders where order.id="+str(cur_user_id))
+    cursor.execute(f"select * from orders where order.id={cur_user_id}")
     cur_order_id = cursor.fetchall()[-1][0]
 
-    cursor.execute("INSERT INTO OrderFoodRelation(food_id, order_id, count) SELECT FoodUserRelation.food_id,"+str(cur_order_id)+",FoodUserRelation.count from FoodUserRelation where FoodUserRelation.user_id ="+str(cur_user_id))
+    cursor.execute(f"INSERT INTO OrderFoodRelation(food_id, order_id, count) SELECT FoodUserRelation.food_id,{cur_order_id},FoodUserRelation.count from FoodUserRelation where FoodUserRelation.user_id ={cur_user_id}")
 
-    cursor.execute("DELETE FROM FoodUserRelation WHERE FoodUserRelation.user_id="+str(cur_user_id))
+    cursor.execute(f"DELETE FROM FoodUserRelation WHERE FoodUserRelation.user_id={cur_user_id}")
     return HttpResponseRedirect(reverse('shop:orders'))
