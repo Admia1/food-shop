@@ -1,0 +1,54 @@
+{% extends "shop/base.html" %}
+{% block data %}
+<a href="{% url 'shop:logout' %}"class="logout-submit">logout</a>
+{% endblock %}
+{% block content %}
+<div class="container">
+    <form action="{% url 'shop:address' address.id %}" method="post">
+        {% csrf_token %}
+        <div class="col-md-8 col-md-offset-2">
+            <div class="panel panel-default">
+                <div class="panel-heading">Edit address</div>
+                <div class="panel-body">
+                    {% if error_message %}
+                        <p class="bg-danger p-d ml-b">{{ error_message }}</p>
+                    {% endif %}
+                    <div hidden class="form-group clearfix">
+                      <label class="col-md-4 control-label text-right">Address id</label>
+                      <div class="col-md-6">
+                          <input type="hidden" name="id" value="{{address.id}}">
+                      </div>
+                    </div>
+                    <div class="form-group clearfix">
+                      <label class="col-md-4 control-label text-right">City id</label>
+                      <div class="col-md-6">
+                          <input type="number" name="city_id" value="{{address.city_id}}">
+                      </div>
+                    </div>
+                    <div class="form-group clearfix">
+                      <label class="col-md-4 control-label text-right">Text</label>
+                      <div class="col-md-6">
+                        <input type="text" name="text" value="{{address.text}}">
+                      </div>
+                    </div>
+                    <div class="form-group clearfix">
+                        <label class="col-md-4 control-label text-right">Geo X</label>
+                        <div class="col-md-6">
+                            <input type="number" name="geo_x" value="{{address.geo_x}}">
+                        </div>
+                    </div>
+                    <div class="form-group clearfix">
+                        <label class="col-md-4 control-label text-right">Geo Y</label>
+                        <div class="col-md-6">
+                            <input type="number" name="geo_y" value="{{address.geo_y}}">
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-md-offset-4">
+                        <input type="submit" value="Edit" class="btn btn-success">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

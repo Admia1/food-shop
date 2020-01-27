@@ -1,0 +1,29 @@
+{% extends "shop/base.html" %}
+{% block data %}
+<a href="{% url 'shop:logout' %}"class="logout-submit">logout</a>
+{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="col-md-8 col-md-offset-2">
+    <div class="panel panel-default">
+      <div class="panel-heading">Orders</div>
+        <div class="panel-body">
+          {% if error_message %}
+              <p class="bg-danger p-d ml-b">{{ error_message }}</p>
+          {% endif %}
+          <div class="col-md-12 col-md-offset-0">
+            <table class="table">
+              <tbody>
+                {% for order in orders %}
+                <tr>
+                  <td><a href="{% url 'shop:order' order.id %}">{{ order.shop_id }}salam{{ order.address_id }}</a></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "shop/base.html" %}
+{% block data %}
+<a href="{% url 'shop:logout' %}"class="logout-submit">logout</a>
+{% endblock %}
+{% block content %}
+<div class="container">
+  <div class="col-md-8 col-md-offset-2">
+    <div class="panel panel-default">
+      <div class="panel-heading">Addresses</div>
+        <div class="panel-body">
+          {% if error_message %}
+              <p class="bg-danger p-d ml-b">{{ error_message }}</p>
+          {% endif %}
+          <div class="col-md-12 col-md-offset-0">
+            <table class="table">
+              <tbody>
+                {% for address in addresses %}
+                <tr>
+                  <td><a href="{% url 'shop:address' address.id %}">{{ address.text }}  {{address.geo_x}}  {{address.geo_y}}</a></td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="container">
+    <form action="{% url 'shop:addresses' %}" method="post">
+        {% csrf_token %}
+        <div class="col-md-8 col-md-offset-2">
+            <div class="panel panel-default">
+                <div class="panel-heading">Add Address</div>
+                <div class="panel-body">
+                    <div class="form-group clearfix">
+                      <label class="col-md-4 control-label text-right">City id</label>
+                      <div class="col-md-6">
+                          <input type="number" name="city_id" value="">
+                      </div>
+                    </div>
+                    <div class="form-group clearfix">
+                      <label class="col-md-4 control-label text-right">Text</label>
+                      <div class="col-md-6">
+                        <input type="text" name="text" value="">
+                      </div>
+                    </div>
+                    <div class="form-group clearfix">
+                        <label class="col-md-4 control-label text-right">Geo X</label>
+                        <div class="col-md-6">
+                            <input type="number" name="geo_x" value="">
+                        </div>
+                    </div>
+                    <div class="form-group clearfix">
+                        <label class="col-md-4 control-label text-right">Geo Y</label>
+                        <div class="col-md-6">
+                            <input type="number" name="geo_y" value="">
+                        </div>
+                    </div>
+                    <div class="col-md-6 col-md-offset-4">
+                        <input type="submit" value="add address" class="btn btn-success">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
