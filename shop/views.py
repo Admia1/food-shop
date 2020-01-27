@@ -167,7 +167,8 @@ def profile(request):
     cursor.execute(f"select * from User where User.id={cur_user_id}")
     data = cursor.fetchone()
     cur_user= {'id':data[0], 'first_name':data[1], 'last_name':data[2], 'email':data[4], 'phone_number':data[5]}
-    return render(request, template, {'user':cur_user})
+    return HttpResponseRedirect(reverse("shop:profile"))
+    #return render(request, template, {'user':cur_user})
 
 
 def dashboard(request):
@@ -299,7 +300,7 @@ def addresses(request):
         return render(request, template, {'error_message':'geo_x geo_y bad format'})
 
     cursor.execute(f"INSERT INTO Address ( text , city_id , geo_x , geo_y, user_id )VALUES ('{request.POST['text']}',{request.POST['city_id']},{request.POST['geo_x']} ,{request.POST['geo_y']},{cur_user_id})")
-    return render(request, template, {'user':cur_user, 'addresses':user_addresses})
+    return HttpResponseRedirect(reverse('shop:addresses'))
 
 
 def address(request, address_id):
@@ -336,7 +337,7 @@ def address(request, address_id):
     new_address = {'id':cur_address['id'] , 'user_id':cur_user_id, 'city_id': int(request.POST['city_id']), 'text':request.POST['text'], 'geo_x':geo_x, 'geo_y':geo_y}
     cursor.execute(f"UPDATE Address SET city_id={request.POST['city_id']} text='{request.POST['text']}' geo_x={request.POST['geo_x']} geo_y={request.POST['geo_y']} where id ={address_id}")
 
-    return HttpResponseRedirect(reverse('shop:address', address_id))
+    return HttpResponseRedirect(reverse('shop:address', kwargs={'address_id':address_id}))
 
 def order(request, order_id):
     template = 'shop/order.html'
@@ -380,8 +381,7 @@ def order(request, order_id):
     new_comment_id = cursor.fetchall()[0][0]
     cursor.execute(f"UPDATE Order SET comment_id={new_comment_id} where id = {order_id}")
     #TODO show comments of order
-    return render(request, template, {'order':cur_order})
-
+    return HttpResponseRedirect(reverse('shop:order', kwargs={'order_id' : order_id}))
 
 def orders(request):
     template = 'shop/orders.html'
@@ -391,7 +391,6 @@ def orders(request):
         return HttpResponseRedirect(reverse('shop:login'))
 
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
-
 
     cursor.execute(f"SELECT * FROM Order where user_id={cur_user_id}")
     data = cursor.fetchall()
@@ -469,4 +468,4 @@ def finalize(request):
     cursor.execute(f"INSERT INTO OrderFoodRelation(food_id, order_id, count) SELECT FoodUserRelation.food_id,{cur_order_id},FoodUserRelation.count from FoodUserRelation where FoodUserRelation.user_id ={cur_user_id}")
 
     cursor.execute(f"DELETE FROM FoodUserRelation WHERE FoodUserRelation.user_id={cur_user_id}")
-    return HttpResponseRedirect(reverse('shop:orders'))
+    return HttpResponseRedirect(reverse('shop:order', kwargs={'order_id':cur_order_id}))
