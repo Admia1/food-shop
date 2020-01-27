@@ -465,6 +465,11 @@ def finalize(request):
 
     cursor.execute(f"select * from food_shop.Order where Order.user_id={cur_user_id}")
     cur_order_id = cursor.fetchall()[-1][0]
+    total = sum([x['count'] * x['discounted_price'] for x in foods],0)
+    cursor.execute(f"select min_bill_val from Shop where id={food[0]['shop_id']}")
+    data = cursor.fetchall()
+    if data[0][0] > total:
+        render(request, template, {'error_message' : 'min bill value error', 'foods':foods, 'addresses':user_addresses(cur_user_id)})
 
     cursor.execute(f"INSERT INTO OrderFoodRelation(food_id, order_id, count) SELECT FoodUserRelation.food_id,{cur_order_id},FoodUserRelation.count from FoodUserRelation where FoodUserRelation.user_id ={cur_user_id}")
     flusher()
