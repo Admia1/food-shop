@@ -1,8 +1,11 @@
 #Database Setup Commands
 CREATE USER food_shop_user ;
 ALTER USER 'food_shop_user'@'localhost' IDENTIFIED BY 'food_shop_user_password';
-CREATE DATABASE food_shop;
 GRANT ALL PRIVILEGES ON *.* TO 'food_shop_user'@'localhost' IDENTIFIED BY 'food_shop_user_password';
+
+
+CREATE DATABASE food_shop;
+
 
 CREATE TABLE food_shop.City (
  id INTEGER  PRIMARY KEY AUTO_INCREMENT,

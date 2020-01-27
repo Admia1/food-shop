@@ -1,15 +1,6 @@
 #Ali Zia Inserts
-INSERT INTO kiho.City ( name , location )
-VALUES (  null  , null );
-
-INSERT INTO kiho.City ( name , location )
- VALUES (  'shiraz'  , 'fars' );
-
-INSERT INTO kiho.City (name, location)
-VALUES ('Tehran', 'Tehran');
-
-INSERT INTO kiho.City (name, location)
-VALUES ('Esfehan', 'Esfehan');
+INSERT INTO food_shop.City (name , geo_x, geo_y)
+ VALUES ('Shiraz' , 300, 200);
 
 
 
