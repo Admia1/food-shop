@@ -1,8 +1,8 @@
 #Database Setup Commands
-CREATE USER food_shop_user ;
-ALTER USER 'food_shop_user'@'localhost' IDENTIFIED BY 'food_shop_user_password';
+CREATE USER food_shop_user1 ;
+ALTER USER 'food_shop_user1'@'localhost' IDENTIFIED BY 'food_shop_user_password';
 CREATE DATABASE food_shop;
-GRANT ALL PRIVILEGES ON *.* TO 'food_shop_user'@'localhost' IDENTIFIED BY 'food_shop_user_password';
+GRANT ALL PRIVILEGES ON *.* TO 'food_shop_user1'@'localhost' IDENTIFIED BY 'food_shop_user_password';
 
 CREATE TABLE food_shop.City (
  id INTEGER  PRIMARY KEY AUTO_INCREMENT,
@@ -83,7 +83,6 @@ CREATE TABLE food_shop.Comment (
 CREATE TABLE food_shop.Order (
  id         INTEGER PRIMARY KEY AUTO_INCREMENT,
  user_id     INTEGER NOT NULL,
- shop_id     INTEGER NOT NULL,
  address_id  INTEGER NOT NULL,
  dis_id      INTEGER,
  comment_id  INTEGER, #nullable
@@ -91,7 +90,6 @@ CREATE TABLE food_shop.Order (
  FOREIGN  KEY   (dis_id) REFERENCES Discount(id),
  FOREIGN  KEY   (address_id) REFERENCES Address(id),
  FOREIGN  KEY   (comment_id) REFERENCES Comment(id),
- FOREIGN  KEY   (shop_id) REFERENCES Shop(id),
  FOREIGN  KEY   (user_id) REFERENCES User(id));
 
 CREATE TABLE food_shop.OrderFoodRelation (

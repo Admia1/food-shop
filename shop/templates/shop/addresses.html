@@ -34,10 +34,12 @@
                 <div class="panel-heading">Add Address</div>
                 <div class="panel-body">
                     <div class="form-group clearfix">
-                      <label class="col-md-4 control-label text-right">City id</label>
-                      <div class="col-md-6">
-                          <input type="number" name="city_id" value="">
-                      </div>
+                      <label class="col-md-4 control-label text-right">City</label>
+                          <select class="col-md-4 col-md-offset-0" name="city_id">
+                            {% for city in cities %}
+                              <option value="{{city.id}}">{{city.name}}</option>
+                            {% endfor %}
+                          </select>
                     </div>
                     <div class="form-group clearfix">
                       <label class="col-md-4 control-label text-right">Text</label>

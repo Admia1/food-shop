@@ -17,7 +17,7 @@ urlpatterns = [
     path('shop/<int:shop_id>/', views.shop, name='shop'),    # add and remove food -> do it on shop with post
 
     path('orders/', views.orders, name='orders'),
-    path('order/<int:shop_id>/', views.order, name='order'),#use post to comment
+    path('order/<int:order_id>/', views.order, name='order'),#use post to comment
 
     path('finilize_order/', views.finalize, name='finalize'),
 

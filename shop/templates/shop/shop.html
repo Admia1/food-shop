@@ -4,7 +4,7 @@
 <div class="container">
   <div class="col-md-8 col-md-offset-2">
     <div class="panel panel-default">
-      <div class="panel-heading">shop.name</div>
+      <div class="panel-heading">{{shop.name}}</div>
         <div class="panel-body">
           {% if error_message %}
               <p class="bg-danger p-d ml-b">{{ error_message }}</p>
@@ -27,7 +27,10 @@
                   <td style="color:red">{{food.discounted_price}}$</td>
                   <td>{{food.price}}$</td>
                   <th><form action="{% url 'shop:shop' shop.id %}" method="post"><input hidden value="1" name="count"><input hidden name="food_id" value="{{food.id}}">{%csrf_token%}<input type="submit" name="" value="+"></form>
+                  {%if food.count%}
+                  <p>{{food.count}}</p>
                   <form action="{% url 'shop:shop' shop.id %}" method="post"><input hidden value="-1" name="count"><input hidden name="food_id" value="{{food.id}}">{%csrf_token%}<input type="submit" name="" value="-"></form></th>
+                  {% endif %}
                 </tr>
                 {% endfor %}
               </tbody>
