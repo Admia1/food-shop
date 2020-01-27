@@ -15,10 +15,12 @@
                     {% endif %}
 
                     <div class="form-group clearfix">
-                        <label class="col-md-4 control-label text-right">Address</label>
-                        <div class="col-md-6">
-                            <input type="number" name="address_id" value="">
-                        </div>
+                      <label class="col-md-4 control-label text-right">Address</label>
+                          <select class="col-md-4 col-md-offset-0" name="address_id">
+                            {% for address in addresses %}
+                              <option value="{{address.id}}">{{address.text}}</option>
+                            {% endfor %}
+                          </select>
                     </div>
                     <div class="form-group clearfix">
                         <label class="col-md-4 control-label text-right">Discount Code</label>
@@ -33,5 +35,27 @@
             </div>
         </div>
     </form>
+</div>
+<div class="container">
+  <div class="col-md-8 col-md-offset-2">
+    <div class="panel panel-default">
+      <div class="panel-heading">Foods</div>
+        <div class="panel-body">
+          <div class="col-md-12 col-md-offset-0">
+            <table class="table">
+              <tbody>
+                {% for food in foods %}
+                <tr>
+                  <td>{{food.name}}</td>
+                  <td>{{food.discounted_price}}</td>
+                  <td>{{food.count}}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}

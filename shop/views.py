@@ -408,41 +408,40 @@ def finalize(request):
 
     cur_user_id = active_cookies.get(request.COOKIES['food-shop-cookie'])
 
-    cursor.execute(f"select FoodUserRelation.*, Food.shop_id, Food.price*(100-Food.discount)/100 from FoodUserRelation join Food on FoodUserRelation.food_id = Food.id and FoodUserRelation.user_id= {cur_user_id}")
+    cursor.execute(f"select FoodUserRelation.*, Food.shop_id, Food.price*(100-Food.discount)/100 ,Food.name from FoodUserRelation join Food on FoodUserRelation.food_id = Food.id and FoodUserRelation.user_id= {cur_user_id}")
     res = cursor.fetchall()
-
     if not res:
         return render(request, template, {'error_message': 'no item to buy'})
-    user_items = [{'id':dat[0], 'food_id':dat[2], 'count':dat[3],'shop_id':dat[-2], 'discounted_price':dat[-1]} for dat in res]
+    foods = [{'id':dat[0], 'food_id':dat[2], 'count':dat[3],'shop_id':dat[-3], 'discounted_price':dat[-2], 'name':dat[-1]} for dat in res]
     if request.method != 'POST':
-        return render(request, template, {'items': user_items})
+        return render(request, template, {'foods':foods, 'addresses':user_addresses(cur_user_id)})
 
     #request is post
 
     for field in ['address_id']:
         if not post_validator(request, field):
-            return render(request, template, {'error_message' : 'invalid post form : '+field,'items': user_items})
+            return render(request, template, {'error_message' : 'invalid post form : '+field,'foods':foods, 'addresses':user_addresses(cur_user_id)})
 
     try:
         cur_address_id = int(request.POST['address_id'])
     except:
-        return render(request, template, {'error_message' : 'invalid address form', 'items': user_items})
+        return render(request, template, {'error_message' : 'invalid address form', 'foods':foods, 'addresses':user_addresses(cur_user_id)})
 
 
     cursor.execute(f"SELECT * from Address WHERE user_id={str(cur_user_id)} and id={request.POST['address_id']}")
     res = cursor.fetchall()
     if not res:
-        return render(request, template, {'error_message' : 'bad address', 'items': user_items})
+        return render(request, template, {'error_message' : 'bad address', 'foods':foods, 'addresses':user_addresses(cur_user_id)})
 
     if 'discount_code' not in request.POST :
-        return render(request, template, {'error_message' : 'missing discount_code in post', 'items': user_items})
+        return render(request, template, {'error_message' : 'missing discount_code in post', 'foods':foods, 'addresses':user_addresses(cur_user_id)})
     if request.POST['discount_code']:
 
         cursor.execute(f"SELECT Discount.id, Discount.percent from Discount join DiscountUserRelation on Discount.id = DiscountUserRelation.dis_id where Discount.code ='{request.POST['discount_code']}' and DiscountUserRelation.user_id IS NULL or DiscountUserRelation.user_id={cur_user_id}")
         data = cursor.fetchall()
         # if not cur_discount:
         if not data:
-            return render(request, template, {'error_message' : 'invalid discount code', 'items': user_items})
+            return render(request, template, {'error_message' : 'invalid discount code', 'foods':foods, 'addresses':user_addresses(cur_user_id)})
         data=data[0]
         cur_discount = {'id':data[0], 'percent':data[1]}
 
@@ -451,7 +450,7 @@ def finalize(request):
         data = cursor.fetchall()
         # if bad_food_shop:
         if data:
-            return render(request, template, {'error_message' : 'you used this before', 'items': user_items})
+            return render(request, template, {'error_message' : 'you used this before', 'foods':foods, 'addresses':user_addresses(cur_user_id)})
         cur_discount_id = cur_discount['id']
         query = f"INSERT INTO food_shop.Order (user_id, address_id, dis_id, comment_id, status) VALUES ({cur_user_id}, {request.POST['address_id']}, {cur_discount_id}, NULL, 0)"
         print(query)

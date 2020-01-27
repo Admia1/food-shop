@@ -16,7 +16,7 @@
               <tbody>
                 {% for order in orders %}
                 <tr>
-                  <td><a href="{% url 'shop:order' order.id %}">{{ order.shop_id }}salam{{ order.address_id }}</a></td>
+                  <td><a href="{% url 'shop:order' order.id %}">Order #{{ order.id }}</a></td>
                 </tr>
                 {% endfor %}
               </tbody>
